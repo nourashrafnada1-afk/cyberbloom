@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CyberBloom — Host</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bloom-pink:  #ff6eb4;
+      --bloom-coral: #ff8c69;
+      --bloom-lilac: #c084fc;
+      --bloom-mint:  #4ade80;
+      --bloom-peach: #ffb347;
+      --bg:          #fff5f7;
+      --text:        #3d1a2e;
+      --muted:       #a87090;
+      --border:      #f9c0d8;
+      --radius:      16px;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      overflow: hidden; position: relative;
+    }
+
+    .blob {
+      position: fixed; border-radius: 50%;
+      filter: blur(80px); opacity: 0.4;
+      animation: drift 8s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    .blob-1 { width:500px;height:500px;background:var(--bloom-lilac); top:-150px;left:-120px;animation-delay:0s; }
+    .blob-2 { width:400px;height:400px;background:var(--bloom-pink);  bottom:-100px;right:-100px;animation-delay:2s; }
+    .blob-3 { width:300px;height:300px;background:var(--bloom-peach); top:40%;left:60%;animation-delay:4s; }
+    @keyframes drift {
+      from { transform:translate(0,0) scale(1); }
+      to   { transform:translate(30px,20px) scale(1.08); }
+    }
+
+    .petal {
+      position: fixed;
+      animation: floatUp linear infinite;
+      pointer-events: none; opacity: 0.6;
+    }
+    @keyframes floatUp {
+      0%   { transform:translateY(100vh) rotate(0deg);   opacity:0; }
+      10%  { opacity:0.6; }
+      90%  { opacity:0.4; }
+      100% { transform:translateY(-10vh) rotate(360deg); opacity:0; }
+    }
+
+    .page {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column;
+      align-items: center;
+      width: 100%; max-width: 420px;
+      padding: 24px;
+      animation: fadeUp 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(28px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .back-link {
+      align-self: flex-start;
+      font-size: 13px; font-weight: 700;
+      color: var(--muted); text-decoration: none;
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 32px;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--bloom-pink); }
+
+    .page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px; font-weight: 900;
+      background: linear-gradient(135deg, var(--bloom-pink), var(--bloom-coral), var(--bloom-lilac));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin-bottom: 6px; text-align: center;
+    }
+    .page-sub {
+      font-size: 14px; font-weight: 600;
+      color: var(--muted); margin-bottom: 36px; text-align: center;
+    }
+
+    .lock-icon {
+      font-size: 52px; margin-bottom: 16px;
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { transform: scale(1); }
+      50%      { transform: scale(1.1); }
+    }
+
+    .error-box {
+      width: 100%;
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,80,80,0.08);
+      border: 1.5px solid rgba(255,80,80,0.3);
+      border-radius: var(--radius);
+      color: #e53e3e;
+      font-size: 13px; font-weight: 600;
+      padding: 12px 16px; margin-bottom: 20px;
+    }
+    .error-box.hidden { display: none; }
+
+    .field-label {
+      display: block;
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px;
+      align-self: flex-start; width: 100%;
+    }
+
+    input[type="password"] {
+      width: 100%;
+      background: rgba(255,240,248,0.6);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px; font-weight: 600;
+      padding: 14px 18px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      margin-bottom: 20px;
+      letter-spacing: 0.2em;
+    }
+    input:focus {
+      border-color: var(--bloom-pink);
+      box-shadow: 0 0 0 3px rgba(255,110,180,0.15);
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--bloom-lilac), var(--bloom-pink));
+      color: white;
+      font-family: 'Playfair Display', serif;
+      font-size: 17px; font-weight: 700;
+      border: none; border-radius: var(--radius);
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(192,132,252,0.4);
+      transition: transform 0.15s, box-shadow 0.2s;
+    }
+    .submit-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(192,132,252,0.5);
+    }
+    .submit-btn:active { transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <div class="page">
+    <a href="/" class="back-link">← Back</a>
+
+    <div class="lock-icon">🔐</div>
+    <div class="page-title">Host Access</div>
+    <div class="page-sub">Enter the host passcode to continue</div>
+
+    <div class="error-box hidden" id="err">🔒 Incorrect passcode. Please try again.</div>
+
+    <form action="/join-host" method="POST" style="width:100%">
+      <label class="field-label" for="password">Passcode</label>
+      <input type="password" id="password" name="password"
+             placeholder="••••••••" required autocomplete="off"/>
+
+      <button type="submit" class="submit-btn">Enter as Host ✦</button>
+    </form>
+  </div>
+
+  <script>
+    const emojis = ['🌸','🌺','🌼','🌷','🌻','💐','🏵️'];
+    for (let i = 0; i < 10; i++) {
+      const p = document.createElement('div');
+      p.className = 'petal';
+      p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.fontSize = (14 + Math.random() * 16) + 'px';
+      p.style.animationDuration = (9 + Math.random() * 14) + 's';
+      p.style.animationDelay = (Math.random() * 14) + 's';
+      document.body.appendChild(p);
+    }
+
+    const params = new URLSearchParams(location.search);
+    if (params.get('error') === 'wrong_password') {
+      document.getElementById('err').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

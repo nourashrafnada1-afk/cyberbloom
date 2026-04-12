@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CyberBloom</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bloom-pink:  #ff6eb4;
+      --bloom-coral: #ff8c69;
+      --bloom-lilac: #c084fc;
+      --bloom-mint:  #4ade80;
+      --bloom-peach: #ffb347;
+      --bg:          #fff5f7;
+      --text:        #3d1a2e;
+      --muted:       #a87090;
+      --border:      #f9c0d8;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Blobs */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.45;
+      animation: drift 8s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    .blob-1 { width:500px; height:500px; background:var(--bloom-pink);  top:-150px; left:-120px; animation-delay:0s; }
+    .blob-2 { width:400px; height:400px; background:var(--bloom-peach); bottom:-100px; right:-100px; animation-delay:2s; }
+    .blob-3 { width:300px; height:300px; background:var(--bloom-lilac); top:40%; left:60%; animation-delay:4s; }
+    .blob-4 { width:250px; height:250px; background:var(--bloom-mint);  bottom:10%; left:5%; animation-delay:1s; }
+    @keyframes drift {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(30px,20px) scale(1.08); }
+    }
+
+    /* Floating petals */
+    .petal {
+      position: fixed;
+      animation: floatUp linear infinite;
+      pointer-events: none;
+      opacity: 0.6;
+      user-select: none;
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(100vh) rotate(0deg);   opacity: 0; }
+      10%  { opacity: 0.6; }
+      90%  { opacity: 0.4; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* Main content */
+    .content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      animation: fadeUp 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(32px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .brand-flower {
+      font-size: 52px;
+      display: block;
+      margin-bottom: 12px;
+      animation: sway 4s ease-in-out infinite;
+    }
+    @keyframes sway {
+      0%,100% { transform: rotate(-8deg); }
+      50%      { transform: rotate(8deg); }
+    }
+
+    .brand-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 58px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--bloom-pink), var(--bloom-coral), var(--bloom-lilac));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .brand-tagline {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 52px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .role-btn {
+      width: 180px;
+      padding: 22px 0;
+      border-radius: 20px;
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.18s, box-shadow 0.2s;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-player {
+      background: linear-gradient(135deg, var(--bloom-pink), var(--bloom-coral));
+      color: white;
+      box-shadow: 0 8px 28px rgba(255,110,180,0.4);
+    }
+    .btn-player:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(255,110,180,0.55);
+    }
+
+    .btn-host {
+      background: white;
+      color: var(--bloom-pink);
+      border: 2.5px solid var(--border);
+      box-shadow: 0 8px 28px rgba(255,110,180,0.12);
+    }
+    .btn-host:hover {
+      transform: translateY(-4px);
+      border-color: var(--bloom-pink);
+      box-shadow: 0 16px 40px rgba(255,110,180,0.25);
+    }
+
+    @media (max-width: 480px) {
+      .brand-name { font-size: 42px; }
+      .role-btn { width: 150px; font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+
+  <div class="content">
+    <span class="brand-flower">🌸</span>
+    <div class="brand-name">CyberBloom</div>
+    <div class="brand-tagline">Live Quiz Experience</div>
+
+    <div class="btn-row">
+      <button class="role-btn btn-player" onclick="location.href='/join-player'">Player</button>
+      <button class="role-btn btn-host"   onclick="location.href='/join-host'">Host</button>
+    </div>
+  </div>
+
+  <script>
+   /* const emojis = ['🌸','🌺','🌼','🌷','🌻','💐','🏵️'];
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement('div');
+      p.className = 'petal';
+      p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.fontSize = (14 + Math.random() * 18) + 'px';
+      p.style.animationDuration = (9 + Math.random() * 14) + 's';
+      p.style.animationDelay = (Math.random() * 14) + 's';
+      document.body.appendChild(p);
+    }*/
+  </script>
+</body>
+</html>

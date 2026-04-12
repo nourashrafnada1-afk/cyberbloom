@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CyberBloom — Host</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+
+    :root {
+      --pink:   #ff6eb4;
+      --coral:  #ff8c69;
+      --peach:  #ffb347;
+      --lilac:  #c084fc;
+      --mint:   #4ade80;
+      --sky:    #38bdf8;
+      --red:    #f87171;
+      --bg:     #fff5f7;
+      --text:   #3d1a2e;
+      --muted:  #a87090;
+      --border: #f9c0d8;
+    }
+
+    body { font-family:'Nunito',sans-serif; background:var(--bg); min-height:100vh; color:var(--text); }
+
+    .blob { position:fixed; border-radius:50%; filter:blur(90px); opacity:0.25; pointer-events:none; }
+    .b1 { width:600px;height:600px;background:var(--pink);  top:-250px;left:-150px; }
+    .b2 { width:450px;height:450px;background:var(--lilac); bottom:-150px;right:-100px; }
+    .b3 { width:300px;height:300px;background:var(--mint);  top:50%;left:50%; }
+
+    .header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 28px;
+      background:rgba(255,245,247,0.88); backdrop-filter:blur(16px);
+      border-bottom:1.5px solid var(--border);
+      position:sticky; top:0; z-index:30;
+    }
+    .logo {
+      font-family:'Playfair Display',serif; font-size:22px; font-weight:900;
+      background:linear-gradient(135deg,var(--pink),var(--coral),var(--lilac));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    }
+    .host-badge {
+      background:linear-gradient(135deg,rgba(255,110,180,0.15),rgba(192,132,252,0.12));
+      border:1.5px solid rgba(255,110,180,0.35); border-radius:50px; padding:6px 16px;
+      font-size:12px; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; color:var(--pink);
+    }
+    .leave-link {
+      font-size:13px; color:var(--muted); text-decoration:none; font-weight:600;
+      padding:7px 14px; border:1.5px solid var(--border); border-radius:10px; transition:all 0.2s;
+    }
+    .leave-link:hover { border-color:var(--red); color:var(--red); }
+
+    .screen { display:none; }
+    .screen.active { display:block; }
+
+    /* ══ SETUP ══ */
+    #screen-setup { padding:40px 28px 40px; max-width:900px; margin:0 auto; padding-right:308px; }
+
+    .setup-title { font-family:'Playfair Display',serif; font-size:32px; font-weight:900; color:var(--text); margin-bottom:6px; }
+    .setup-sub { color:var(--muted); font-size:15px; font-weight:600; margin-bottom:32px; }
+
+    .questions-grid { display:flex; flex-direction:column; gap:20px; margin-bottom:32px; }
+
+    .q-card {
+      background:rgba(255,255,255,0.85); backdrop-filter:blur(14px);
+      border:1.5px solid var(--border); border-radius:20px; padding:24px 28px;
+      box-shadow:0 4px 20px rgba(255,110,180,0.07); transition:box-shadow 0.2s;
+    }
+    .q-card:focus-within { box-shadow:0 8px 32px rgba(255,110,180,0.18); }
+    .q-card-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+    .q-badge {
+      background:linear-gradient(135deg,var(--pink),var(--lilac)); color:white;
+      font-family:'Playfair Display',serif; font-size:13px; font-weight:700;
+      padding:4px 14px; border-radius:50px;
+    }
+    .q-card-header span { font-size:13px; color:var(--muted); font-weight:600; }
+
+    .q-input {
+      width:100%; background:rgba(255,240,248,0.5); border:1.5px solid var(--border);
+      border-radius:12px; color:var(--text); font-family:'Nunito',sans-serif;
+      font-size:15px; font-weight:600; padding:12px 16px; outline:none;
+      transition:border-color 0.2s; margin-bottom:14px;
+    }
+    .q-input:focus { border-color:var(--pink); }
+
+    .options-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+    .opt-wrap { position:relative; }
+    .opt-letter {
+      position:absolute; left:12px; top:50%; transform:translateY(-50%);
+      width:26px; height:26px; border-radius:50%; font-size:12px; font-weight:800;
+      color:white; display:flex; align-items:center; justify-content:center;
+    }
+    .opt-a{background:var(--pink);} .opt-b{background:var(--coral);}
+    .opt-c{background:var(--lilac);} .opt-d{background:var(--sky);}
+    .opt-input {
+      width:100%; background:rgba(255,240,248,0.5); border:1.5px solid var(--border);
+      border-radius:12px; color:var(--text); font-family:'Nunito',sans-serif;
+      font-size:14px; font-weight:600; padding:11px 14px 11px 46px; outline:none;
+      transition:border-color 0.2s;
+    }
+    .opt-input:focus { border-color:var(--pink); }
+
+    /* No correct-answer selector needed — answers are hardcoded in server */
+    .answer-key-note {
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12px; font-weight:700; color:var(--muted);
+      background:rgba(255,110,180,0.06); border:1.5px solid var(--border);
+      border-radius:50px; padding:5px 14px;
+    }
+
+    .start-btn {
+      width:100%; padding:18px;
+      background:linear-gradient(135deg,var(--pink),var(--coral),var(--lilac));
+      color:white; font-family:'Playfair Display',serif;
+      font-size:18px; font-weight:900; border:none; border-radius:16px;
+      cursor:pointer; box-shadow:0 10px 32px rgba(255,110,180,0.4);
+      transition:transform 0.15s, box-shadow 0.2s;
+    }
+    .start-btn:hover { transform:translateY(-3px); box-shadow:0 18px 40px rgba(255,110,180,0.5); }
+    .start-btn:disabled { background:linear-gradient(135deg,#e5b8cc,#d8c4e8); cursor:not-allowed; box-shadow:none; transform:none; }
+
+    /* Lobby sidebar */
+    .lobby-bar {
+      position:fixed; right:0; top:66px; bottom:0; width:280px;
+      background:rgba(255,255,255,0.88); backdrop-filter:blur(16px);
+      border-left:1.5px solid var(--border); padding:20px; overflow-y:auto; z-index:20;
+    }
+    .lobby-title { font-family:'Playfair Display',serif; font-size:14px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
+    .lobby-count {
+      background:linear-gradient(135deg,rgba(255,110,180,0.12),rgba(192,132,252,0.1));
+      border:1.5px solid rgba(255,110,180,0.25); border-radius:50px; display:inline-block;
+      padding:4px 14px; font-size:13px; font-weight:800; color:var(--pink); margin-bottom:16px;
+    }
+    .lobby-player {
+      display:flex; align-items:center; gap:10px; padding:10px 12px;
+      background:rgba(255,240,248,0.5); border:1.5px solid var(--border);
+      border-radius:12px; margin-bottom:8px; font-size:13px; font-weight:700;
+      animation:slideIn 0.35s ease;
+    }
+    @keyframes slideIn { from{opacity:0;transform:translateX(20px);} to{opacity:1;transform:none;} }
+    .lobby-avatar {
+      width:30px; height:30px; border-radius:50%;
+      background:linear-gradient(135deg,var(--pink),var(--lilac));
+      color:white; font-size:12px; font-weight:800;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .lobby-empty { font-size:13px; color:var(--muted); text-align:center; padding:20px; }
+
+    /* ══ LIVE ══ */
+    #screen-live { display:none; padding:32px 28px; max-width:780px; margin:0 auto; }
+    #screen-live.active { display:block; }
+
+    .live-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .live-q-badge {
+      font-family:'Playfair Display',serif; font-size:15px; font-weight:700; color:var(--pink);
+      background:rgba(255,110,180,0.1); border:1.5px solid rgba(255,110,180,0.25);
+      border-radius:50px; padding:7px 20px;
+    }
+    .next-btn {
+      padding:12px 32px;
+      background:linear-gradient(135deg,var(--pink),var(--coral));
+      color:white; font-family:'Playfair Display',serif; font-size:15px; font-weight:700;
+      border:none; border-radius:50px; cursor:pointer;
+      box-shadow:0 6px 20px rgba(255,110,180,0.35); transition:transform 0.15s, box-shadow 0.2s;
+    }
+    .next-btn:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(255,110,180,0.45); }
+
+    .live-progress { width:100%; height:6px; background:var(--border); border-radius:50px; margin-bottom:24px; overflow:hidden; }
+    .live-progress-fill { height:100%; background:linear-gradient(90deg,var(--pink),var(--coral),var(--lilac)); border-radius:50px; transition:width 0.5s ease; }
+
+    .live-q-text {
+      font-family:'Playfair Display',serif; font-size:22px; font-weight:700;
+      color:var(--text); line-height:1.5;
+      background:rgba(255,255,255,0.85); backdrop-filter:blur(12px);
+      border:1.5px solid var(--border); border-radius:20px; padding:26px 30px;
+      margin-bottom:20px; box-shadow:0 6px 24px rgba(255,110,180,0.08);
+    }
+
+    .live-options { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
+    .live-opt {
+      display:flex; align-items:center; gap:12px; padding:14px 18px;
+      background:rgba(255,255,255,0.7); border:1.5px solid var(--border);
+      border-radius:14px; font-size:14px; font-weight:700;
+    }
+    .live-opt-letter { width:30px; height:30px; border-radius:50%; color:white; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .live-opt.correct-opt { border-color:var(--mint); background:rgba(74,222,128,0.1); }
+
+    .correct-answer-tag {
+      display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:800; color:#166534;
+      background:rgba(74,222,128,0.15); border:1.5px solid rgba(74,222,128,0.4);
+      border-radius:50px; padding:6px 16px; margin-bottom:20px;
+    }
+
+    .live-players-title { font-family:'Playfair Display',serif; font-size:13px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:12px; }
+    .live-players-grid { display:flex; flex-direction:column; gap:8px; }
+    .live-p-row {
+      display:flex; align-items:center; gap:12px;
+      background:rgba(255,255,255,0.8); border:1.5px solid var(--border);
+      border-radius:14px; padding:12px 16px; transition:all 0.2s;
+    }
+    .live-p-row.answered { border-color:var(--mint); background:rgba(74,222,128,0.07); }
+    .live-p-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--pink),var(--lilac)); color:white; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .live-p-name { flex:1; font-size:14px; font-weight:700; }
+    .live-p-status { font-size:12px; font-weight:700; }
+    .live-p-status.done { color:var(--mint); } .live-p-status.wait { color:var(--muted); }
+    .live-p-score { font-family:'Playfair Display',serif; font-size:18px; font-weight:900; color:var(--pink); }
+
+    /* ══ RESULTS ══ */
+    #screen-results { display:none; padding:40px 28px; max-width:700px; margin:0 auto; }
+    #screen-results.active { display:block; }
+
+    .results-banner { text-align:center; margin-bottom:32px; }
+    .results-banner-title { font-family:'Playfair Display',serif; font-size:40px; font-weight:900; color:var(--text); margin-bottom:8px; }
+    .results-banner-sub { color:var(--muted); font-size:15px; font-weight:600; }
+
+    .podium { display:flex; justify-content:center; align-items:flex-end; gap:12px; margin-bottom:32px; }
+    .podium-item {
+      display:flex; flex-direction:column; align-items:center;
+      background:rgba(255,255,255,0.85); border:1.5px solid var(--border);
+      border-radius:16px; padding:16px 20px;
+      box-shadow:0 6px 24px rgba(255,110,180,0.1);
+    }
+    .podium-medal { font-size:32px; margin-bottom:6px; }
+    .podium-name { font-size:13px; font-weight:800; color:var(--text); margin-bottom:4px; text-align:center; }
+    .podium-score { font-family:'Playfair Display',serif; font-size:20px; font-weight:900; color:var(--pink); }
+    .podium-item.rank1 { transform:translateY(-16px); border-color:rgba(245,158,11,0.5); box-shadow:0 12px 36px rgba(245,158,11,0.2); }
+
+    .full-table {
+      background:rgba(255,255,255,0.85); backdrop-filter:blur(14px);
+      border:1.5px solid var(--border); border-radius:20px; overflow:hidden;
+      box-shadow:0 8px 32px rgba(255,110,180,0.08);
+    }
+    .ft-head {
+      display:grid; grid-template-columns:60px 1fr 100px 80px;
+      padding:14px 24px; font-size:11px; font-weight:800;
+      letter-spacing:0.1em; text-transform:uppercase; color:var(--muted);
+      border-bottom:1.5px solid var(--border);
+    }
+    .ft-row {
+      display:grid; grid-template-columns:60px 1fr 100px 80px;
+      padding:14px 24px; border-bottom:1px solid rgba(249,192,216,0.25);
+      align-items:center; transition:background 0.2s;
+    }
+    .ft-row:last-child { border-bottom:none; }
+    .ft-row:hover { background:rgba(255,110,180,0.04); }
+    .ft-rank { font-family:'Playfair Display',serif; font-size:16px; font-weight:900; color:var(--muted); }
+    .ft-rank.g1{color:#f59e0b;} .ft-rank.g2{color:#9ca3af;} .ft-rank.g3{color:#b45309;}
+    .ft-name { font-size:14px; font-weight:700; }
+    .ft-id { font-size:12px; color:var(--muted); font-weight:600; }
+    .ft-score { font-family:'Playfair Display',serif; font-size:18px; font-weight:900; color:var(--pink); text-align:right; }
+
+    @media(max-width:700px) {
+      #screen-setup { padding-right:28px; }
+      .lobby-bar { display:none; }
+      .options-grid { grid-template-columns:1fr; }
+      .live-options { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+
+  <header class="header">
+    <div class="logo">🌸 CyberBloom</div>
+    <div class="host-badge">🎙️ Host</div>
+    <a href="/leave" class="leave-link">Leave</a>
+  </header>
+
+  <!-- SETUP -->
+  <section class="screen active" id="screen-setup">
+    <div class="setup-title">🌸 Create Your Quiz</div>
+    <div class="setup-sub">Fill in all 10 questions, then start the session when players are ready.</div>
+    <div class="questions-grid" id="questions-grid"></div>
+    <button class="start-btn" id="start-btn" onclick="startSession()" disabled>
+      🌺 Start Quiz Session
+    </button>
+  </section>
+
+  <!-- LOBBY SIDEBAR -->
+  <aside class="lobby-bar" id="lobby-bar">
+    <div class="lobby-title">🌱 Lobby</div>
+    <div class="lobby-count" id="lobby-count">0 players</div>
+    <div id="lobby-list"><div class="lobby-empty">No players yet…</div></div>
+  </aside>
+
+  <!-- LIVE -->
+  <section class="screen" id="screen-live">
+    <div class="live-header">
+      <div class="live-q-badge" id="live-q-badge">Question 1 / 10</div>
+      <button class="next-btn" id="next-btn" onclick="nextQuestion()">Next Question →</button>
+    </div>
+    <div class="live-progress"><div class="live-progress-fill" id="live-progress" style="width:10%"></div></div>
+    <div class="live-q-text" id="live-q-text">—</div>
+    <div class="live-options" id="live-options"></div>
+    <div class="correct-answer-tag" id="correct-tag">✅ Correct: —</div>
+    <div class="live-players-title">Players — Live Progress</div>
+    <div class="live-players-grid" id="live-players-grid"></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="screen" id="screen-results">
+    <div class="results-banner">
+      <div class="results-banner-title">🏆 Quiz Finished!</div>
+      <div class="results-banner-sub">Final Rankings</div>
+    </div>
+    <div class="podium" id="podium"></div>
+    <div class="full-table">
+      <div class="ft-head">
+        <div>Rank</div><div>Name</div><div>ID Number</div><div style="text-align:right">Score</div>
+      </div>
+      <div id="ft-body"></div>
+    </div>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+  (() => {
+    'use strict';
+
+    let sock = null, myName = '';
+    let questions = [], currentPlayers = [];
+    let currentQIndex = -1, currentCorrect = '';
+
+    // ── Build question forms ─────────────────────────────────────────────────
+    const grid = document.getElementById('questions-grid');
+    for (let i = 0; i < 10; i++) {
+      const optColors = ['opt-a','opt-b','opt-c','opt-d'];
+      const optBg = ['var(--pink)','var(--coral)','var(--lilac)','var(--sky)'];
+      grid.innerHTML += `
+        <div class="q-card" id="qcard-${i}">
+          <div class="q-card-header">
+            <div class="q-badge">Q${i+1}</div>
+            <span>Enter the question text and four options</span>
+          </div>
+          <input class="q-input" type="text" id="qt-${i}" placeholder="Question ${i+1}…" oninput="validateForm()"/>
+          <div class="options-grid">
+            ${['A','B','C','D'].map((l,j) => `
+              <div class="opt-wrap">
+                <span class="opt-letter ${optColors[j]}" style="background:${optBg[j]}">${l}</span>
+                <input class="opt-input" type="text" id="opt-${i}-${l}" placeholder="Option ${l}…" oninput="validateForm()"/>
+              </div>`).join('')}
+          </div>
+          <div class="answer-key-note">🔐 Correct answer set by answer key</div>
+        </div>`;
+    }
+
+    function validateForm() {
+      for (let i = 0; i < 10; i++) {
+        if (!document.getElementById(`qt-${i}`).value.trim()) {
+          document.getElementById('start-btn').disabled = true; return;
+        }
+        for (const l of ['A','B','C','D']) {
+          if (!document.getElementById(`opt-${i}-${l}`).value.trim()) {
+            document.getElementById('start-btn').disabled = true; return;
+          }
+        }
+      }
+      document.getElementById('start-btn').disabled = false;
+    }
+
+    function collectQuestions() {
+      questions = [];
+      for (let i = 0; i < 10; i++) {
+        questions.push({
+          text: document.getElementById(`qt-${i}`).value.trim(),
+          options: {
+            A: document.getElementById(`opt-${i}-A`).value.trim(),
+            B: document.getElementById(`opt-${i}-B`).value.trim(),
+            C: document.getElementById(`opt-${i}-C`).value.trim(),
+            D: document.getElementById(`opt-${i}-D`).value.trim(),
+          },
+        });
+      }
+    }
+
+    // ── Socket ───────────────────────────────────────────────────────────────
+    async function init() {
+      const res = await fetch('/api/session');
+      if (!res.ok) { location.href='/'; return; }
+      const s = await res.json();
+      if (s.role !== 'host') { location.href='/player'; return; }
+      myName = s.name;
+      connect();
+    }
+
+    function connect() {
+      sock = io();
+      sock.on('connect', () => sock.emit('register', { role:'host', name:myName }));
+
+      sock.on('host_init', ({ players }) => {
+        currentPlayers = players;
+        renderLobby(players);
+      });
+
+      sock.on('players_update', ({ players }) => {
+        currentPlayers = players;
+        renderLobby(players);
+        if (document.getElementById('screen-live').classList.contains('active')) {
+          renderLivePlayers(players);
+        }
+      });
+
+      sock.on('new_question_host', ({ index, total, text, options, correct }) => {
+        currentQIndex = index;
+        currentCorrect = correct;
+        renderLiveQuestion(index, total, text, options, correct);
+        showScreen('screen-live');
+      });
+
+      sock.on('session_ended', ({ results }) => {
+        renderResults(results);
+        showScreen('screen-results');
+      });
+    }
+
+    window.startSession = function () {
+      collectQuestions();
+      sock.emit('set_questions', questions);
+      setTimeout(() => sock.emit('start_session'), 100);
+    };
+
+    window.nextQuestion = function () { sock.emit('next_question'); };
+
+    // ── Render ───────────────────────────────────────────────────────────────
+    function showScreen(id) {
+      ['screen-setup','screen-live','screen-results'].forEach(s =>
+        document.getElementById(s).classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      document.getElementById('lobby-bar').style.display = (id === 'screen-setup') ? '' : 'none';
+    }
+
+    function renderLobby(players) {
+      const c = players.length;
+      document.getElementById('lobby-count').textContent = `${c} player${c!==1?'s':''}`;
+      const list = document.getElementById('lobby-list');
+      if (!c) { list.innerHTML = '<div class="lobby-empty">No players yet…</div>'; return; }
+      list.innerHTML = players.map(p => `
+        <div class="lobby-player">
+          <div class="lobby-avatar">${p.name.charAt(0).toUpperCase()}</div>
+          <span>${p.name}</span>
+        </div>`).join('');
+    }
+
+    function renderLiveQuestion(index, total, text, options, correct) {
+      document.getElementById('live-q-badge').textContent = `Question ${index+1} / ${total}`;
+      document.getElementById('live-progress').style.width = ((index+1)/total*100) + '%';
+      document.getElementById('live-q-text').textContent = text;
+      document.getElementById('correct-tag').textContent = `✅ Correct Answer: ${correct} — ${options[correct]}`;
+
+      const optColors = {A:'var(--pink)',B:'var(--coral)',C:'var(--lilac)',D:'var(--sky)'};
+      document.getElementById('live-options').innerHTML = ['A','B','C','D'].map(l => `
+        <div class="live-opt ${l===correct?'correct-opt':''}">
+          <div class="live-opt-letter" style="background:${optColors[l]}">${l}</div>
+          <span>${options[l]}</span>
+          ${l===correct?'<span style="margin-left:auto;font-size:11px;color:var(--mint);font-weight:800;">✓ CORRECT</span>':''}
+        </div>`).join('');
+
+      document.getElementById('next-btn').textContent =
+        index + 1 >= total ? 'Finish Quiz 🏁' : 'Next Question →';
+
+      renderLivePlayers(currentPlayers);
+    }
+
+    function renderLivePlayers(players) {
+      const el = document.getElementById('live-players-grid');
+      if (!players.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">No players connected</div>'; return; }
+      const sorted = [...players].sort((a,b) => b.score - a.score);
+      el.innerHTML = sorted.map(p => {
+        const answered = p.submitted && p.submitted[currentQIndex];
+        return `<div class="live-p-row ${answered?'answered':''}">
+          <div class="live-p-avatar">${p.name.charAt(0).toUpperCase()}</div>
+          <div class="live-p-name">${p.name}</div>
+          <div class="live-p-status ${answered?'done':'wait'}">${answered?'✅ Answered':'⏳ Waiting'}</div>
+          <div class="live-p-score">${p.score}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderResults(results) {
+      const medals = ['🥇','🥈','🥉'];
+      const top3 = results.slice(0,3);
+      const podiumOrder = [top3[1], top3[0], top3[2]].filter(Boolean);
+      document.getElementById('podium').innerHTML = podiumOrder.map(r => `
+        <div class="podium-item ${r.rank===1?'rank1':''}">
+          <div class="podium-medal">${medals[r.rank-1]||''}</div>
+          <div class="podium-name">${r.name}</div>
+          <div class="podium-score">${r.score}/${r.total}</div>
+        </div>`).join('');
+
+      const rankCls = ['g1','g2','g3'];
+      document.getElementById('ft-body').innerHTML = results.map((r,i) => `
+        <div class="ft-row">
+          <div class="ft-rank ${rankCls[i]||''}">${medals[i]||r.rank}</div>
+          <div class="ft-name">${r.name}</div>
+          <div class="ft-id">${r.idnum}</div>
+          <div class="ft-score">${r.score}/${r.total}</div>
+        </div>`).join('');
+    }
+
+    init();
+  })();
+  </script>
+</body>
+</html>

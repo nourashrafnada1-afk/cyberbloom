@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CyberBloom — Player</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink:   #ff6eb4;
+      --coral:  #ff8c69;
+      --peach:  #ffb347;
+      --lilac:  #c084fc;
+      --mint:   #4ade80;
+      --sky:    #38bdf8;
+      --red:    #f87171;
+      --bg:     #fff5f7;
+      --text:   #3d1a2e;
+      --muted:  #a87090;
+      --border: #f9c0d8;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    .blob { position:fixed; border-radius:50%; filter:blur(90px); opacity:0.3; pointer-events:none; }
+    .b1 { width:500px;height:500px;background:var(--pink);  top:-200px;left:-100px; animation:drift1 10s ease-in-out infinite alternate; }
+    .b2 { width:400px;height:400px;background:var(--peach); bottom:-150px;right:-100px; animation:drift2 12s ease-in-out infinite alternate; }
+    .b3 { width:300px;height:300px;background:var(--lilac); top:50%;left:55%; animation:drift1 9s ease-in-out infinite alternate; }
+    @keyframes drift1 { from{transform:translate(0,0);}  to{transform:translate(40px,30px);} }
+    @keyframes drift2 { from{transform:translate(0,0);}  to{transform:translate(-30px,20px);} }
+
+    .header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 28px;
+      background:rgba(255,245,247,0.85);
+      backdrop-filter:blur(16px);
+      border-bottom:1.5px solid var(--border);
+      position:sticky; top:0; z-index:20;
+    }
+    .logo {
+      font-family:'Playfair Display',serif;
+      font-size:22px; font-weight:900;
+      background:linear-gradient(135deg,var(--pink),var(--coral),var(--lilac));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    }
+    .player-chip {
+      display:flex; align-items:center; gap:10px;
+      background:rgba(255,110,180,0.1);
+      border:1.5px solid rgba(255,110,180,0.3);
+      border-radius:50px; padding:6px 16px;
+      font-size:13px; font-weight:700; color:var(--pink);
+    }
+    .leave-link {
+      font-size:13px; color:var(--muted); text-decoration:none; font-weight:600;
+      padding:7px 14px; border:1.5px solid var(--border); border-radius:10px;
+      transition:all 0.2s;
+    }
+    .leave-link:hover { border-color:var(--red); color:var(--red); }
+
+    .screen { display:none; min-height:calc(100vh - 66px); }
+    .screen.active { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px 20px; }
+
+    /* WAITING */
+    .wait-card {
+      background:rgba(255,255,255,0.85); backdrop-filter:blur(20px);
+      border:1.5px solid var(--border); border-radius:28px;
+      padding:52px 48px; max-width:460px; width:100%;
+      text-align:center;
+      box-shadow:0 20px 60px rgba(255,110,180,0.12);
+      animation:popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    @keyframes popIn { from{opacity:0;transform:scale(0.85)translateY(20px);} to{opacity:1;transform:none;} }
+    .wait-bloom { font-size:72px; margin-bottom:16px; animation:sway 3s ease-in-out infinite; display:block; }
+    @keyframes sway { 0%,100%{transform:rotate(-8deg);} 50%{transform:rotate(8deg);} }
+    .wait-title { font-family:'Playfair Display',serif; font-size:30px; font-weight:900; color:var(--text); margin-bottom:10px; }
+    .wait-sub { color:var(--muted); font-size:15px; font-weight:600; margin-bottom:28px; }
+    .wait-dots { display:flex; justify-content:center; gap:8px; }
+    .dot { width:10px; height:10px; border-radius:50%; animation:bounce 1.2s ease-in-out infinite; }
+    .dot:nth-child(1){ background:var(--pink);  animation-delay:0s; }
+    .dot:nth-child(2){ background:var(--coral); animation-delay:0.2s; }
+    .dot:nth-child(3){ background:var(--lilac); animation-delay:0.4s; }
+    .dot:nth-child(4){ background:var(--mint);  animation-delay:0.6s; }
+    @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-12px);} }
+    .wait-count { margin-top:20px; font-size:13px; color:var(--muted); font-weight:600; }
+
+    /* QUESTION */
+    .q-wrap { width:100%; max-width:680px; animation:slideIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+    @keyframes slideIn { from{opacity:0;transform:translateX(60px);} to{opacity:1;transform:none;} }
+    .q-progress-bar { width:100%; height:6px; background:var(--border); border-radius:50px; margin-bottom:24px; overflow:hidden; }
+    .q-progress-fill { height:100%; background:linear-gradient(90deg,var(--pink),var(--coral),var(--lilac)); border-radius:50px; transition:width 0.5s ease; }
+    .q-meta { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+    .q-num {
+      font-family:'Playfair Display',serif; font-size:14px; font-weight:700; color:var(--pink);
+      background:rgba(255,110,180,0.1); border:1.5px solid rgba(255,110,180,0.25);
+      padding:5px 14px; border-radius:50px;
+    }
+    .q-text {
+      font-family:'Playfair Display',serif; font-size:22px; font-weight:700;
+      color:var(--text); line-height:1.5;
+      background:rgba(255,255,255,0.85); backdrop-filter:blur(16px);
+      border:1.5px solid var(--border); border-radius:20px;
+      padding:28px 32px; margin-bottom:24px;
+      box-shadow:0 8px 30px rgba(255,110,180,0.08);
+    }
+    .choices { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px; }
+    .choice-btn {
+      display:flex; align-items:center; gap:14px;
+      padding:18px 20px;
+      background:rgba(255,255,255,0.85); backdrop-filter:blur(10px);
+      border:2px solid var(--border); border-radius:16px;
+      cursor:pointer; font-family:'Nunito',sans-serif;
+      font-size:15px; font-weight:700; color:var(--text);
+      transition:all 0.2s; text-align:left;
+    }
+    .choice-btn:hover:not(:disabled) {
+      border-color:var(--pink); background:rgba(255,110,180,0.07);
+      transform:translateY(-2px); box-shadow:0 8px 20px rgba(255,110,180,0.15);
+    }
+    .choice-btn.selected {
+      border-color:var(--pink);
+      background:linear-gradient(135deg,rgba(255,110,180,0.15),rgba(192,132,252,0.12));
+      box-shadow:0 6px 20px rgba(255,110,180,0.25);
+    }
+    .choice-btn.locked-in {
+      border-color:var(--lilac);
+      background:linear-gradient(135deg,rgba(192,132,252,0.15),rgba(255,110,180,0.1));
+      cursor:not-allowed;
+    }
+    .choice-btn:disabled { cursor:not-allowed; }
+    .choice-letter {
+      width:34px; height:34px; flex-shrink:0; border-radius:50%;
+      background:linear-gradient(135deg,var(--pink),var(--lilac));
+      color:white; font-size:14px; font-weight:800;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .choice-btn.selected .choice-letter { background:linear-gradient(135deg,var(--coral),var(--pink)); }
+    .choice-btn.locked-in .choice-letter { background:linear-gradient(135deg,var(--lilac),var(--sky)); }
+
+    .submit-row { display:flex; justify-content:center; }
+    .submit-q-btn {
+      padding:15px 48px;
+      background:linear-gradient(135deg,var(--pink),var(--coral));
+      color:white; font-family:'Playfair Display',serif;
+      font-size:17px; font-weight:700;
+      border:none; border-radius:50px; cursor:pointer;
+      box-shadow:0 8px 24px rgba(255,110,180,0.4);
+      transition:transform 0.15s, box-shadow 0.2s;
+    }
+    .submit-q-btn:hover:not(:disabled) { transform:translateY(-3px); box-shadow:0 14px 32px rgba(255,110,180,0.5); }
+    .submit-q-btn:disabled { background:linear-gradient(135deg,#e5b8cc,#e5c6b8); cursor:not-allowed; box-shadow:none; }
+
+    .waiting-next {
+      display:none; text-align:center; padding:18px 24px;
+      background:rgba(255,255,255,0.85); border:1.5px solid var(--border);
+      border-radius:16px; font-size:15px; font-weight:700; color:var(--muted);
+      animation:popIn 0.3s ease;
+    }
+    .waiting-next.show { display:block; }
+
+    /* RESULTS */
+    .results-wrap { width:100%; max-width:580px; text-align:center; }
+    .results-title { font-family:'Playfair Display',serif; font-size:36px; font-weight:900; color:var(--text); margin-bottom:8px; }
+    .results-sub { color:var(--muted); font-size:15px; font-weight:600; margin-bottom:32px; }
+    .my-score-card {
+      background:linear-gradient(135deg,var(--pink),var(--coral),var(--lilac));
+      border-radius:24px; padding:36px; color:white; margin-bottom:28px;
+      box-shadow:0 16px 48px rgba(255,110,180,0.35);
+      animation:popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    .my-rank-num { font-family:'Playfair Display',serif; font-size:72px; font-weight:900; line-height:1; margin-bottom:8px; }
+    .my-rank-label { font-size:15px; font-weight:700; opacity:0.85; margin-bottom:16px; }
+    .my-score-num { font-size:28px; font-weight:800; background:rgba(255,255,255,0.2); border-radius:50px; display:inline-block; padding:8px 28px; }
+    .leaderboard {
+      background:rgba(255,255,255,0.85); backdrop-filter:blur(16px);
+      border:1.5px solid var(--border); border-radius:20px; overflow:hidden;
+      box-shadow:0 8px 30px rgba(255,110,180,0.08);
+    }
+    .lb-title { padding:16px 24px; font-family:'Playfair Display',serif; font-size:14px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); border-bottom:1.5px solid var(--border); }
+    .lb-row { display:flex; align-items:center; gap:14px; padding:14px 24px; border-bottom:1px solid rgba(249,192,216,0.3); transition:background 0.2s; }
+    .lb-row:last-child { border-bottom:none; }
+    .lb-row.me { background:rgba(255,110,180,0.07); }
+    .lb-rank { font-family:'Playfair Display',serif; font-size:16px; font-weight:900; width:28px; text-align:center; color:var(--muted); }
+    .lb-rank.g1 { color:#f59e0b; } .lb-rank.g2 { color:#9ca3af; } .lb-rank.g3 { color:#b45309; }
+    .lb-name { flex:1; font-size:14px; font-weight:700; text-align:left; }
+    .lb-score { font-family:'Playfair Display',serif; font-size:20px; font-weight:900; color:var(--pink); }
+
+    @media(max-width:600px) {
+      .choices { grid-template-columns:1fr; }
+      .q-text { font-size:18px; padding:20px; }
+      .wait-card { padding:36px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+
+  <header class="header">
+    <div class="logo">🌸 CyberBloom</div>
+    <div class="player-chip">🎮 <span id="header-name">Player</span></div>
+    <a href="/leave" class="leave-link">Leave</a>
+  </header>
+
+  <section class="screen active" id="screen-wait">
+    <div class="wait-card">
+      <span class="wait-bloom">🌸</span>
+      <div class="wait-title">You're in the Bloom!</div>
+      <div class="wait-sub">Waiting for the host to start the quiz…</div>
+      <div class="wait-dots">
+        <div class="dot"></div><div class="dot"></div>
+        <div class="dot"></div><div class="dot"></div>
+      </div>
+      <div class="wait-count" id="wait-count">🌱 Loading…</div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-question">
+    <div class="q-wrap">
+      <div class="q-progress-bar"><div class="q-progress-fill" id="q-progress" style="width:0%"></div></div>
+      <div class="q-meta"><div class="q-num" id="q-num">Question 1 / 10</div></div>
+      <div class="q-text" id="q-text">Loading…</div>
+      <div class="choices" id="choices"></div>
+      <div class="submit-row" id="submit-row">
+        <button class="submit-q-btn" id="submit-q-btn" disabled onclick="submitAnswer()">Submit Answer ✦</button>
+      </div>
+      <div class="waiting-next" id="waiting-next">🌸 Answer submitted! Waiting for the next question…</div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-results">
+    <div class="results-wrap">
+      <div class="results-title">🏆 Quiz Complete!</div>
+      <div class="results-sub">Here's how you did</div>
+      <div class="my-score-card">
+        <div class="my-rank-num" id="my-rank">—</div>
+        <div class="my-rank-label">Your Rank</div>
+        <div class="my-score-num" id="my-score-display">0 / 0</div>
+      </div>
+      <div class="leaderboard">
+        <div class="lb-title">🌸 Leaderboard</div>
+        <div id="lb-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+  (() => {
+    'use strict';
+
+    let myName = '', myIdnum = '';
+    let currentQ = null, selectedAnswer = null, submitted = false;
+    let sock = null;
+
+    const screens = {
+      wait:     document.getElementById('screen-wait'),
+      question: document.getElementById('screen-question'),
+      results:  document.getElementById('screen-results'),
+    };
+
+    function showScreen(name) {
+      Object.values(screens).forEach(s => s.classList.remove('active'));
+      screens[name].classList.add('active');
+    }
+
+    async function init() {
+      const res = await fetch('/api/session');
+      if (!res.ok) { location.href='/'; return; }
+      const s = await res.json();
+      myName  = s.name;
+      myIdnum = s.idnum;
+      document.getElementById('header-name').textContent = myName;
+      connect();
+    }
+
+    function connect() {
+      sock = io();
+
+      sock.on('connect', () => {
+        sock.emit('register', { role:'player', name:myName, idnum:myIdnum });
+      });
+
+      sock.on('player_init', ({ sessionStarted, sessionEnded, question }) => {
+        if (sessionEnded)              { showScreen('results'); return; }
+        if (sessionStarted && question){ renderQuestion(question); showScreen('question'); return; }
+        showScreen('wait');
+      });
+
+      sock.on('players_update', ({ players }) => {
+        document.getElementById('wait-count').textContent =
+          `🌱 ${players.length} player${players.length !== 1 ? 's' : ''} in the lobby`;
+      });
+
+      sock.on('session_started', () => showScreen('question'));
+
+      sock.on('new_question', (q) => {
+        submitted = false; selectedAnswer = null;
+        renderQuestion(q);
+        showScreen('question');
+      });
+
+      sock.on('answer_confirmed', () => {
+        submitted = true;
+        lockChoices();
+      });
+
+      sock.on('session_ended', ({ results }) => {
+        renderResults(results);
+        showScreen('results');
+      });
+    }
+
+    function renderQuestion(q) {
+      currentQ = q; selectedAnswer = null; submitted = false;
+      document.getElementById('q-num').textContent = `Question ${q.index + 1} / ${q.total}`;
+      document.getElementById('q-progress').style.width = (q.index / q.total * 100) + '%';
+      document.getElementById('q-text').textContent = q.text;
+
+      const choicesEl = document.getElementById('choices');
+      choicesEl.innerHTML = '';
+      const optColors = ['var(--pink)','var(--coral)','var(--lilac)','var(--sky)'];
+      ['A','B','C','D'].forEach((letter, i) => {
+        if (!q.options[letter]) return;
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.dataset.letter = letter;
+        btn.innerHTML = `<span class="choice-letter" style="background:${optColors[i]}">${letter}</span><span>${q.options[letter]}</span>`;
+        btn.addEventListener('click', () => selectChoice(letter));
+        choicesEl.appendChild(btn);
+      });
+
+      document.getElementById('submit-q-btn').disabled = true;
+      document.getElementById('submit-row').style.display = 'flex';
+      document.getElementById('waiting-next').classList.remove('show');
+    }
+
+    function selectChoice(letter) {
+      if (submitted) return;
+      selectedAnswer = letter;
+      document.querySelectorAll('.choice-btn').forEach(b =>
+        b.classList.toggle('selected', b.dataset.letter === letter));
+      document.getElementById('submit-q-btn').disabled = false;
+    }
+
+    window.submitAnswer = function () {
+      if (!selectedAnswer || submitted) return;
+      sock.emit('submit_answer', { qIndex: currentQ.index, answer: selectedAnswer });
+    };
+
+    function lockChoices() {
+      document.querySelectorAll('.choice-btn').forEach(b => {
+        b.disabled = true;
+        if (b.dataset.letter === selectedAnswer) {
+          b.classList.remove('selected');
+          b.classList.add('locked-in');
+        }
+      });
+      document.getElementById('submit-row').style.display = 'none';
+      document.getElementById('waiting-next').classList.add('show');
+    }
+
+    function renderResults(results) {
+      const mine = results.find(r => r.name === myName);
+      const rankEmoji = ['🥇','🥈','🥉'];
+      document.getElementById('my-rank').textContent =
+        mine ? (rankEmoji[mine.rank - 1] || '#' + mine.rank) : '—';
+      document.getElementById('my-score-display').textContent =
+        mine ? `${mine.score} / ${mine.total}` : '—';
+
+      const list = document.getElementById('lb-list');
+      list.innerHTML = results.map((r, i) => {
+        const medal  = rankEmoji[i] || '';
+        const rankCls = i===0?'g1':i===1?'g2':i===2?'g3':'';
+        return `<div class="lb-row ${r.name === myName ? 'me' : ''}">
+          <div class="lb-rank ${rankCls}">${medal || r.rank}</div>
+          <div class="lb-name">${r.name}${r.name === myName ? ' (you)' : ''}</div>
+          <div class="lb-score">${r.score}/${r.total}</div>
+        </div>`;
+      }).join('');
+    }
+
+    init();
+  })();
+  </script>
+</body>
+</html>
