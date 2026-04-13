@@ -276,6 +276,6 @@ function buildResults() {
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 httpServer.listen(PORT, () => {
-  console.log(`\n🌸  CyberBloom running at http://localhost:${PORT}\n`);
+  console.log(`\n🌸  CloudyBloom running at http://localhost:${PORT}\n`);
   console.log(`   Answer key: ${QUESTIONS.map(q => q.correct).join(' ')}\n`);
 });
