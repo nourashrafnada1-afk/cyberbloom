@@ -13,62 +13,37 @@ const io = new Server(httpServer, { cors: { origin: '*' } });
 const PORT = process.env.PORT || 3000;
 const HOST_PASSWORD = '2792025';
 
-// ─── Questions (hardcoded — edit here) ───────────────────────────────────────
-// Players only see A B C D — the question text is NEVER sent to players.
-// Correct answers: Q1=D, Q2=D, Q3=B, Q4=C, Q5=A, Q6=A, Q7=B, Q8=C, Q9=C, Q10=B
+// ─── Questions (hardcoded) ────────────────────────────────────────────────────
+// Edit question text and options here.
+// Correct answers: D D B C A A B C C B
 
 const QUESTIONS = [
-  {
-    text: 'Question 1 text goes here',
-    options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' },
-    correct: 'D',
-  },
-  {
-    text: 'Question 2 text goes here',
-    options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' },
-    correct: 'D',
-  },
-  {
-    text: 'Question 3 text goes here',
-    options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' },
-    correct: 'B',
-  },
-  {
-    text: 'Question 4 text goes here',
-    options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' },
-    correct: 'C',
-  },
-  {
-    text: 'Question 5 text goes here',
-    options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' },
-    correct: 'A',
-  },
-  {
-    text: 'Question 6 text goes here',
-    options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' },
-    correct: 'A',
-  },
-  {
-    text: 'Question 7 text goes here',
-    options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' },
-    correct: 'B',
-  },
-  {
-    text: 'Question 8 text goes here',
-    options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' },
-    correct: 'C',
-  },
-  {
-    text: 'Question 9 text goes here',
-    options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' },
-    correct: 'C',
-  },
-  {
-    text: 'Question 10 text goes here',
-    options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' },
-    correct: 'B',
-  },
+  { text: 'Question 1 text goes here', options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' }, correct: 'D' },
+  { text: 'Question 2 text goes here', options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' }, correct: 'D' },
+  { text: 'Question 3 text goes here', options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' }, correct: 'B' },
+  { text: 'Question 4 text goes here', options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' }, correct: 'C' },
+  { text: 'Question 5 text goes here', options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' }, correct: 'A' },
+  { text: 'Question 6 text goes here', options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' }, correct: 'A' },
+  { text: 'Question 7 text goes here', options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' }, correct: 'B' },
+  { text: 'Question 8 text goes here', options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' }, correct: 'C' },
+  { text: 'Question 9 text goes here', options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' }, correct: 'C' },
+  { text: 'Question 10 text goes here', options: { A: 'Option A', B: 'Option B', C: 'Option C', D: 'Option D' }, correct: 'B' },
 ];
+
+// ─── Shared Session State ─────────────────────────────────────────────────────
+// Single source of truth — every socket that connects syncs to this.
+
+const state = {
+  sessionStarted:  false,
+  sessionEnded:    false,
+  currentQuestion: 0,
+};
+
+// players[sid] = { sid, name, idnum, score, submitted: { [qIndex]: true } }
+const players = {};
+
+// Track all host socket IDs (supports multiple host tabs/devices)
+const hostSids = new Set();
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 
@@ -80,16 +55,6 @@ app.use(session({
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-
-// ─── In-Memory State ──────────────────────────────────────────────────────────
-
-const players = {};
-// players[sid] = { sid, name, idnum, score, submitted: { [qIndex]: true } }
-
-let hostSid         = null;
-let sessionStarted  = false;
-let sessionEnded    = false;
-let currentQuestion = 0;
 
 // ─── HTTP Routes ──────────────────────────────────────────────────────────────
 
@@ -138,113 +103,197 @@ app.get('/api/session', (req, res) => res.json({
 
 io.on('connection', (socket) => {
 
-  socket.on('register', ({ role, name, idnum }) => {
-    if (role === 'host') {
-      hostSid = socket.id;
-      socket.join('host');
-      socket.emit('host_init', {
-        players: Object.values(players),
-        sessionStarted,
-        sessionEnded,
-        currentQuestion,
-        totalQuestions: QUESTIONS.length,
-      });
-      return;
-    }
+  // ── HOST registers ───────────────────────────────────────────────────────────
+  socket.on('register_host', () => {
+    hostSids.add(socket.id);
+    socket.join('hosts');
 
-    players[socket.id] = { sid: socket.id, name, idnum, score: 0, submitted: {} };
-    socket.join('players');
-
-    socket.emit('player_init', {
-      sessionStarted,
-      sessionEnded,
-      currentQuestion,
-      totalQuestions: QUESTIONS.length,
+    // Send full current state so any host joining at any time is in sync
+    socket.emit('host_sync', {
+      players:         Object.values(players),
+      sessionStarted:  state.sessionStarted,
+      sessionEnded:    state.sessionEnded,
+      currentQuestion: state.currentQuestion,
+      totalQuestions:  QUESTIONS.length,
+      // If session running, send full current question
+      currentQuestionData: state.sessionStarted && !state.sessionEnded
+        ? buildHostQuestion(state.currentQuestion)
+        : null,
+      // If session ended, send results
+      results: state.sessionEnded ? buildResults() : null,
     });
 
-    io.to('host').emit('players_update', { players: Object.values(players) });
-    io.to('host').emit('player_joined', { name, count: Object.keys(players).length });
+    console.log(`[HOST] connected: ${socket.id} | total hosts: ${hostSids.size}`);
   });
 
-  // Host starts the session
-  socket.on('start_session', () => {
-    if (socket.id !== hostSid) return;
-    sessionStarted  = true;
-    sessionEnded    = false;
-    currentQuestion = 0;
+  // ── PLAYER registers ─────────────────────────────────────────────────────────
+  socket.on('register_player', ({ name, idnum }) => {
+    // Register or re-register the player (handles reconnects by name+idnum match)
+    const existing = Object.values(players).find(
+      p => p.name === name && p.idnum === idnum
+    );
 
+    if (existing) {
+      // Reconnecting player — update their socket ID
+      delete players[existing.sid];
+      existing.sid = socket.id;
+      players[socket.id] = existing;
+    } else {
+      players[socket.id] = {
+        sid:       socket.id,
+        name,
+        idnum,
+        score:     0,
+        submitted: {},
+      };
+    }
+
+    socket.join('players');
+
+    // Send full current state so player syncs no matter when they join
+    const playerSync = {
+      sessionStarted:  state.sessionStarted,
+      sessionEnded:    state.sessionEnded,
+      currentQuestion: state.currentQuestion,
+      totalQuestions:  QUESTIONS.length,
+      myScore:         players[socket.id].score,
+      alreadySubmitted: !!players[socket.id].submitted[state.currentQuestion],
+      // If session running, send current question (number only — no text)
+      currentQuestionData: state.sessionStarted && !state.sessionEnded
+        ? { index: state.currentQuestion, total: QUESTIONS.length }
+        : null,
+      // If session ended, send results
+      results: state.sessionEnded ? buildResults() : null,
+    };
+
+    socket.emit('player_sync', playerSync);
+
+    // Notify all hosts about updated player list
+    io.to('hosts').emit('players_update', { players: Object.values(players) });
+
+    console.log(`[PLAYER] ${name} connected: ${socket.id} | total players: ${Object.keys(players).length}`);
+  });
+
+  // ── HOST: start session ──────────────────────────────────────────────────────
+  socket.on('start_session', () => {
+    if (!hostSids.has(socket.id)) return;
+    if (state.sessionStarted) return; // already started
+
+    state.sessionStarted  = true;
+    state.sessionEnded    = false;
+    state.currentQuestion = 0;
+
+    // Reset all player scores
     for (const sid in players) {
       players[sid].score     = 0;
       players[sid].submitted = {};
     }
 
-    io.emit('session_started', {});
-    broadcastQuestion(currentQuestion);
-    io.to('host').emit('players_update', { players: Object.values(players) });
+    // Tell everyone session started
+    io.emit('session_started', { totalQuestions: QUESTIONS.length });
+
+    // Send question to players (number only) and hosts (full)
+    broadcastQuestion(state.currentQuestion);
+
+    // Update hosts with fresh player list
+    io.to('hosts').emit('players_update', { players: Object.values(players) });
+
+    console.log(`[SESSION] Started by host ${socket.id}`);
   });
 
-  // Host moves to next question
+  // ── HOST: next question ──────────────────────────────────────────────────────
   socket.on('next_question', () => {
-    if (socket.id !== hostSid) return;
-    currentQuestion++;
+    if (!hostSids.has(socket.id)) return;
+    if (!state.sessionStarted || state.sessionEnded) return;
 
-    if (currentQuestion >= QUESTIONS.length) {
-      sessionEnded = true;
+    state.currentQuestion++;
+
+    if (state.currentQuestion >= QUESTIONS.length) {
+      // Session over
+      state.sessionEnded = true;
       const results = buildResults();
       io.emit('session_ended', { results });
-      io.to('host').emit('players_update', { players: Object.values(players) });
+      io.to('hosts').emit('players_update', { players: Object.values(players) });
+      console.log(`[SESSION] Ended`);
     } else {
-      broadcastQuestion(currentQuestion);
-      io.to('host').emit('players_update', { players: Object.values(players) });
+      broadcastQuestion(state.currentQuestion);
+      io.to('hosts').emit('players_update', { players: Object.values(players) });
+      console.log(`[SESSION] Advanced to Q${state.currentQuestion + 1} by host ${socket.id}`);
     }
   });
 
-  // Player submits answer
+  // ── PLAYER: submit answer ────────────────────────────────────────────────────
   socket.on('submit_answer', ({ qIndex, answer }) => {
     const player = players[socket.id];
-    if (!player || !sessionStarted || sessionEnded) return;
-    if (qIndex !== currentQuestion) return;
-    if (player.submitted[qIndex]) return;
+    if (!player) return;
+    if (!state.sessionStarted || state.sessionEnded) return;
+    if (qIndex !== state.currentQuestion) return;
+    if (player.submitted[qIndex]) return; // already submitted
 
     player.submitted[qIndex] = true;
+
+    // Grade silently
     if (answer === QUESTIONS[qIndex].correct) player.score += 1;
 
-    // No right/wrong feedback — just confirm submission
+    // Confirm to player — no right/wrong info
     socket.emit('answer_confirmed', { qIndex });
-    io.to('host').emit('players_update', { players: Object.values(players) });
+
+    // Update all hosts
+    io.to('hosts').emit('players_update', { players: Object.values(players) });
+
+    console.log(`[ANSWER] ${player.name} answered Q${qIndex + 1}: ${answer}`);
   });
 
+  // ── disconnect ───────────────────────────────────────────────────────────────
   socket.on('disconnect', () => {
-    if (socket.id === hostSid) { hostSid = null; return; }
+    if (hostSids.has(socket.id)) {
+      hostSids.delete(socket.id);
+      console.log(`[HOST] disconnected: ${socket.id} | remaining hosts: ${hostSids.size}`);
+      return;
+    }
+
     if (players[socket.id]) {
       const { name } = players[socket.id];
-      delete players[socket.id];
-      io.to('host').emit('players_update', { players: Object.values(players) });
-      io.to('host').emit('player_left', { name, count: Object.keys(players).length });
+      // Don't delete the player — keep their score/state so they can reconnect
+      // Just remove from socket room tracking; their record stays in players{}
+      // (If you want to remove them on disconnect, uncomment the line below)
+      // delete players[socket.id];
+
+      io.to('hosts').emit('players_update', { players: Object.values(players) });
+      console.log(`[PLAYER] ${name} disconnected (state preserved for reconnect)`);
     }
   });
 });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/** Send the current question to all players (number only) and all hosts (full). */
 function broadcastQuestion(index) {
   const q = QUESTIONS[index];
-  // Players get ONLY the question number — no text, no options text
-  // Just the index so they know which question they're on
+
+  // Players: only question number — no text, no options
   io.to('players').emit('new_question', {
     index,
     total: QUESTIONS.length,
   });
-  // Host gets full question with correct answer
-  io.to('host').emit('new_question_host', {
-    index,
-    total: QUESTIONS.length,
-    text:  q.text,
-    options: q.options,
-    correct: q.correct,
-  });
+
+  // Hosts: full question + correct answer
+  io.to('hosts').emit('new_question_host', buildHostQuestion(index));
 }
 
+/** Build the full question object for the host. */
+function buildHostQuestion(index) {
+  const q = QUESTIONS[index];
+  return {
+    index,
+    total:   QUESTIONS.length,
+    text:    q.text,
+    options: q.options,
+    correct: q.correct,
+  };
+}
+
+/** Build sorted results array. */
 function buildResults() {
   return Object.values(players)
     .sort((a, b) => b.score - a.score)
@@ -261,4 +310,6 @@ function buildResults() {
 
 httpServer.listen(PORT, () => {
   console.log(`\n🌸  CyberBloom running at http://localhost:${PORT}\n`);
+  console.log(`   Total questions: ${QUESTIONS.length}`);
+  console.log(`   Answer key: ${QUESTIONS.map(q => q.correct).join(' ')}\n`);
 });
