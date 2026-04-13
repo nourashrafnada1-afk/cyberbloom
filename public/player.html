@@ -7,43 +7,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --pink:   #ff6eb4;
-      --coral:  #ff8c69;
-      --peach:  #ffb347;
-      --lilac:  #c084fc;
-      --mint:   #4ade80;
-      --sky:    #38bdf8;
-      --red:    #f87171;
-      --bg:     #fff5f7;
-      --text:   #3d1a2e;
-      --muted:  #a87090;
-      --border: #f9c0d8;
+      --pink:#ff6eb4; --coral:#ff8c69; --peach:#ffb347; --lilac:#c084fc;
+      --mint:#4ade80; --sky:#38bdf8; --red:#f87171;
+      --bg:#fff5f7; --text:#3d1a2e; --muted:#a87090; --border:#f9c0d8;
     }
-
-    body {
-      font-family: 'Nunito', sans-serif;
-      background: var(--bg);
-      min-height: 100vh;
-      color: var(--text);
-      overflow-x: hidden;
-    }
+    body { font-family:'Nunito',sans-serif; background:var(--bg); min-height:100vh; color:var(--text); overflow-x:hidden; }
 
     .blob { position:fixed; border-radius:50%; filter:blur(90px); opacity:0.3; pointer-events:none; }
-    .b1 { width:500px;height:500px;background:var(--pink);  top:-200px;left:-100px; animation:drift1 10s ease-in-out infinite alternate; }
-    .b2 { width:400px;height:400px;background:var(--peach); bottom:-150px;right:-100px; animation:drift2 12s ease-in-out infinite alternate; }
-    .b3 { width:300px;height:300px;background:var(--lilac); top:50%;left:55%; animation:drift1 9s ease-in-out infinite alternate; }
-    @keyframes drift1 { from{transform:translate(0,0);}  to{transform:translate(40px,30px);} }
-    @keyframes drift2 { from{transform:translate(0,0);}  to{transform:translate(-30px,20px);} }
+    .b1 { width:500px;height:500px;background:var(--pink);  top:-200px;left:-100px; animation:d1 10s ease-in-out infinite alternate; }
+    .b2 { width:400px;height:400px;background:var(--peach); bottom:-150px;right:-100px; animation:d2 12s ease-in-out infinite alternate; }
+    .b3 { width:300px;height:300px;background:var(--lilac); top:50%;left:55%; animation:d1 9s ease-in-out infinite alternate; }
+    @keyframes d1 { from{transform:translate(0,0);} to{transform:translate(40px,30px);} }
+    @keyframes d2 { from{transform:translate(0,0);} to{transform:translate(-30px,20px);} }
 
-    /* Header */
     .header {
       display:flex; align-items:center; justify-content:space-between;
-      padding:16px 28px;
-      background:rgba(255,245,247,0.85); backdrop-filter:blur(16px);
-      border-bottom:1.5px solid var(--border);
-      position:sticky; top:0; z-index:20;
+      padding:16px 28px; background:rgba(255,245,247,0.85); backdrop-filter:blur(16px);
+      border-bottom:1.5px solid var(--border); position:sticky; top:0; z-index:20;
     }
     .logo {
       font-family:'Playfair Display',serif; font-size:22px; font-weight:900;
@@ -51,9 +32,8 @@
       -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
     }
     .player-chip {
-      display:flex; align-items:center; gap:8px;
-      background:rgba(255,110,180,0.1); border:1.5px solid rgba(255,110,180,0.3);
-      border-radius:50px; padding:6px 16px;
+      display:flex; align-items:center; gap:8px; background:rgba(255,110,180,0.1);
+      border:1.5px solid rgba(255,110,180,0.3); border-radius:50px; padding:6px 16px;
       font-size:13px; font-weight:700; color:var(--pink);
     }
     .leave-link {
@@ -62,11 +42,10 @@
     }
     .leave-link:hover { border-color:var(--red); color:var(--red); }
 
-    /* Screens */
     .screen { display:none; min-height:calc(100vh - 66px); }
     .screen.active { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px 20px; }
 
-    /* ── WAITING ── */
+    /* WAITING */
     .wait-card {
       background:rgba(255,255,255,0.85); backdrop-filter:blur(20px);
       border:1.5px solid var(--border); border-radius:28px;
@@ -81,14 +60,14 @@
     .wait-sub { color:var(--muted); font-size:15px; font-weight:600; margin-bottom:28px; }
     .wait-dots { display:flex; justify-content:center; gap:8px; }
     .dot { width:10px; height:10px; border-radius:50%; animation:bounce 1.2s ease-in-out infinite; }
-    .dot:nth-child(1){ background:var(--pink);  animation-delay:0s; }
-    .dot:nth-child(2){ background:var(--coral); animation-delay:0.2s; }
-    .dot:nth-child(3){ background:var(--lilac); animation-delay:0.4s; }
-    .dot:nth-child(4){ background:var(--mint);  animation-delay:0.6s; }
+    .dot:nth-child(1){background:var(--pink); animation-delay:0s;}
+    .dot:nth-child(2){background:var(--coral);animation-delay:0.2s;}
+    .dot:nth-child(3){background:var(--lilac);animation-delay:0.4s;}
+    .dot:nth-child(4){background:var(--mint); animation-delay:0.6s;}
     @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-12px);} }
     .wait-count { margin-top:20px; font-size:13px; color:var(--muted); font-weight:600; }
 
-    /* ── QUESTION ── */
+    /* QUESTION */
     .q-wrap {
       width:100%; max-width:480px;
       display:flex; flex-direction:column; align-items:center; gap:28px;
@@ -96,109 +75,57 @@
     }
     @keyframes slideIn { from{opacity:0;transform:translateY(40px);} to{opacity:1;transform:none;} }
 
-    /* Progress dots */
-    .progress-dots {
-      display:flex; gap:8px; justify-content:center;
-    }
-    .prog-dot {
-      width:10px; height:10px; border-radius:50%;
-      background:var(--border); transition:background 0.3s;
-    }
+    .progress-dots { display:flex; gap:8px; justify-content:center; }
+    .prog-dot { width:10px; height:10px; border-radius:50%; background:var(--border); transition:background 0.3s; }
     .prog-dot.active { background:var(--pink); transform:scale(1.3); }
     .prog-dot.done   { background:var(--lilac); }
 
-    /* Question number badge — big and prominent */
     .q-number-badge {
-      font-family:'Playfair Display',serif;
-      font-size:72px; font-weight:900; line-height:1;
+      font-family:'Playfair Display',serif; font-size:72px; font-weight:900; line-height:1;
       background:linear-gradient(135deg,var(--pink),var(--coral),var(--lilac));
       -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
       text-align:center;
     }
-    .q-number-label {
-      font-size:14px; font-weight:700; color:var(--muted);
-      text-transform:uppercase; letter-spacing:0.12em; text-align:center;
-      margin-top:-8px;
-    }
+    .q-number-label { font-size:14px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.12em; text-align:center; margin-top:-8px; }
 
-    /* A B C D choice buttons — large, square-ish, 2x2 grid */
-    .choices {
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:16px;
-      width:100%;
-    }
-
+    .choices { display:grid; grid-template-columns:1fr 1fr; gap:16px; width:100%; }
     .choice-btn {
-      aspect-ratio: 1 / 0.85;
-      display:flex; flex-direction:column;
-      align-items:center; justify-content:center; gap:10px;
-      border:2.5px solid var(--border);
-      border-radius:20px;
-      background:rgba(255,255,255,0.85);
-      backdrop-filter:blur(10px);
-      cursor:pointer;
-      transition:all 0.2s;
-      font-family:'Playfair Display',serif;
+      aspect-ratio:1/0.85; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+      border:2.5px solid var(--border); border-radius:20px; background:rgba(255,255,255,0.85);
+      backdrop-filter:blur(10px); cursor:pointer; transition:all 0.2s; font-family:'Playfair Display',serif;
     }
-    .choice-btn:hover:not(:disabled) {
-      transform:translateY(-4px);
-      box-shadow:0 12px 28px rgba(255,110,180,0.2);
-    }
+    .choice-btn:hover:not(:disabled) { transform:translateY(-4px); box-shadow:0 12px 28px rgba(255,110,180,0.2); }
     .choice-letter-big {
-      width:52px; height:52px; border-radius:50%;
-      display:flex; align-items:center; justify-content:center;
-      font-size:24px; font-weight:900; color:white;
-      transition:transform 0.2s;
+      width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-size:24px; font-weight:900; color:white; transition:transform 0.2s;
     }
     .btn-a .choice-letter-big { background:linear-gradient(135deg,#ff6eb4,#ff9ecc); }
     .btn-b .choice-letter-big { background:linear-gradient(135deg,#ff8c69,#ffb347); }
     .btn-c .choice-letter-big { background:linear-gradient(135deg,#c084fc,#e0aaff); }
     .btn-d .choice-letter-big { background:linear-gradient(135deg,#38bdf8,#7dd3fc); }
-
     .choice-btn:hover:not(:disabled) .choice-letter-big { transform:scale(1.1); }
-
-    .choice-btn.selected {
-      border-color:var(--pink);
-      background:linear-gradient(135deg,rgba(255,110,180,0.12),rgba(192,132,252,0.1));
-      box-shadow:0 8px 24px rgba(255,110,180,0.25);
-    }
-    .choice-btn.locked-in {
-      border-color:var(--lilac);
-      background:linear-gradient(135deg,rgba(192,132,252,0.15),rgba(56,189,248,0.1));
-      cursor:not-allowed;
-    }
+    .choice-btn.selected { border-color:var(--pink); background:linear-gradient(135deg,rgba(255,110,180,0.12),rgba(192,132,252,0.1)); box-shadow:0 8px 24px rgba(255,110,180,0.25); }
+    .choice-btn.locked-in { border-color:var(--lilac); background:linear-gradient(135deg,rgba(192,132,252,0.15),rgba(56,189,248,0.1)); cursor:not-allowed; }
     .choice-btn:disabled { cursor:not-allowed; }
 
-    /* Submit button */
     .submit-q-btn {
       width:100%; padding:16px;
       background:linear-gradient(135deg,var(--pink),var(--coral));
-      color:white; font-family:'Playfair Display',serif;
-      font-size:18px; font-weight:700;
+      color:white; font-family:'Playfair Display',serif; font-size:18px; font-weight:700;
       border:none; border-radius:50px; cursor:pointer;
-      box-shadow:0 8px 24px rgba(255,110,180,0.4);
-      transition:transform 0.15s, box-shadow 0.2s;
+      box-shadow:0 8px 24px rgba(255,110,180,0.4); transition:transform 0.15s, box-shadow 0.2s;
     }
-    .submit-q-btn:hover:not(:disabled) {
-      transform:translateY(-3px);
-      box-shadow:0 14px 32px rgba(255,110,180,0.5);
-    }
-    .submit-q-btn:disabled {
-      background:linear-gradient(135deg,#e5b8cc,#e5c6b8);
-      cursor:not-allowed; box-shadow:none;
-    }
+    .submit-q-btn:hover:not(:disabled) { transform:translateY(-3px); box-shadow:0 14px 32px rgba(255,110,180,0.5); }
+    .submit-q-btn:disabled { background:linear-gradient(135deg,#e5b8cc,#e5c6b8); cursor:not-allowed; box-shadow:none; }
 
-    /* Waiting after submit */
     .waiting-next {
       display:none; text-align:center; padding:18px 28px;
       background:rgba(255,255,255,0.85); border:1.5px solid var(--border);
-      border-radius:16px; font-size:15px; font-weight:700; color:var(--muted);
-      width:100%;
+      border-radius:16px; font-size:15px; font-weight:700; color:var(--muted); width:100%;
     }
     .waiting-next.show { display:block; }
 
-    /* ── RESULTS ── */
+    /* RESULTS */
     .results-wrap { width:100%; max-width:560px; text-align:center; }
     .results-title { font-family:'Playfair Display',serif; font-size:36px; font-weight:900; color:var(--text); margin-bottom:8px; }
     .results-sub { color:var(--muted); font-size:15px; font-weight:600; margin-bottom:32px; }
@@ -211,12 +138,7 @@
     .my-rank-num { font-family:'Playfair Display',serif; font-size:80px; font-weight:900; line-height:1; margin-bottom:8px; }
     .my-rank-label { font-size:15px; font-weight:700; opacity:0.85; margin-bottom:16px; }
     .my-score-num { font-size:28px; font-weight:800; background:rgba(255,255,255,0.2); border-radius:50px; display:inline-block; padding:8px 28px; }
-
-    .leaderboard {
-      background:rgba(255,255,255,0.85); backdrop-filter:blur(16px);
-      border:1.5px solid var(--border); border-radius:20px; overflow:hidden;
-      box-shadow:0 8px 30px rgba(255,110,180,0.08);
-    }
+    .leaderboard { background:rgba(255,255,255,0.85); backdrop-filter:blur(16px); border:1.5px solid var(--border); border-radius:20px; overflow:hidden; box-shadow:0 8px 30px rgba(255,110,180,0.08); }
     .lb-title { padding:16px 24px; font-family:'Playfair Display',serif; font-size:14px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); border-bottom:1.5px solid var(--border); }
     .lb-row { display:flex; align-items:center; gap:14px; padding:14px 24px; border-bottom:1px solid rgba(249,192,216,0.3); transition:background 0.2s; }
     .lb-row:last-child { border-bottom:none; }
@@ -234,16 +156,14 @@
   </style>
 </head>
 <body>
-  <div class="blob b1"></div>
-  <div class="blob b2"></div>
-  <div class="blob b3"></div>
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
 
   <header class="header">
     <div class="logo">🌸 CyberBloom</div>
-    
+    <div class="player-chip">🎮 <span id="header-name">Player</span></div>
+    <a href="/leave" class="leave-link">Leave</a>
   </header>
 
-  <!-- WAITING -->
   <section class="screen active" id="screen-wait">
     <div class="wait-card">
       <span class="wait-bloom">🌸</span>
@@ -257,47 +177,24 @@
     </div>
   </section>
 
-  <!-- QUESTION — only number + ABCD -->
   <section class="screen" id="screen-question">
     <div class="q-wrap">
-
-      <!-- progress dots -->
       <div class="progress-dots" id="progress-dots"></div>
-
-      <!-- Big question number -->
       <div>
         <div class="q-number-badge" id="q-number">1</div>
         <div class="q-number-label" id="q-number-label">Question 1 of 10</div>
       </div>
-
-      <!-- A B C D only -->
       <div class="choices">
-        <button class="choice-btn btn-a" id="btn-A" onclick="selectChoice('A')">
-          <div class="choice-letter-big">A</div>
-        </button>
-        <button class="choice-btn btn-b" id="btn-B" onclick="selectChoice('B')">
-          <div class="choice-letter-big">B</div>
-        </button>
-        <button class="choice-btn btn-c" id="btn-C" onclick="selectChoice('C')">
-          <div class="choice-letter-big">C</div>
-        </button>
-        <button class="choice-btn btn-d" id="btn-D" onclick="selectChoice('D')">
-          <div class="choice-letter-big">D</div>
-        </button>
+        <button class="choice-btn btn-a" id="btn-A" onclick="selectChoice('A')"><div class="choice-letter-big">A</div></button>
+        <button class="choice-btn btn-b" id="btn-B" onclick="selectChoice('B')"><div class="choice-letter-big">B</div></button>
+        <button class="choice-btn btn-c" id="btn-C" onclick="selectChoice('C')"><div class="choice-letter-big">C</div></button>
+        <button class="choice-btn btn-d" id="btn-D" onclick="selectChoice('D')"><div class="choice-letter-big">D</div></button>
       </div>
-
-      <button class="submit-q-btn" id="submit-q-btn" disabled onclick="submitAnswer()">
-        Confirm Answer ✦
-      </button>
-
-      <div class="waiting-next" id="waiting-next">
-        🌸 Answer locked in! Waiting for the next question…
-      </div>
-
+      <button class="submit-q-btn" id="submit-q-btn" disabled onclick="submitAnswer()">Confirm Answer ✦</button>
+      <div class="waiting-next" id="waiting-next">🌸 Answer locked in! Waiting for the next question…</div>
     </div>
   </section>
 
-  <!-- RESULTS -->
   <section class="screen" id="screen-results">
     <div class="results-wrap">
       <div class="results-title">🏆 Quiz Complete!</div>
@@ -321,7 +218,7 @@
 
     let myName = '', myIdnum = '';
     let currentQ = null, selectedAnswer = null, submitted = false;
-    let totalQuestions = 10;
+    let myScore = 0, totalQuestions = 10;
     let sock = null;
 
     const screens = {
@@ -349,13 +246,31 @@
       sock = io();
 
       sock.on('connect', () => {
-        sock.emit('register', { role: 'player', name: myName, idnum: myIdnum });
+        // Always re-register on every connect/reconnect
+        sock.emit('register_player', { name: myName, idnum: myIdnum });
       });
 
-      sock.on('player_init', ({ sessionStarted, sessionEnded, totalQuestions: tq }) => {
-        totalQuestions = tq;
-        buildProgressDots(tq);
-        if (sessionEnded) { showScreen('results'); return; }
+      // Full state sync — handles joining at any point
+      sock.on('player_sync', (data) => {
+        totalQuestions = data.totalQuestions;
+        myScore        = data.myScore || 0;
+        buildProgressDots(totalQuestions);
+
+        if (data.sessionEnded) {
+          renderResults(data.results);
+          showScreen('results');
+          return;
+        }
+
+        if (data.sessionStarted && data.currentQuestionData) {
+          const q = data.currentQuestionData;
+          submitted = data.alreadySubmitted || false;
+          renderQuestion(q.index, q.total);
+          if (submitted) lockChoices();
+          showScreen('question');
+          return;
+        }
+
         showScreen('wait');
       });
 
@@ -364,13 +279,17 @@
           `🌱 ${players.length} player${players.length !== 1 ? 's' : ''} in the lobby`;
       });
 
-      sock.on('session_started', () => {
+      // Session starts — go to question screen (question will arrive via new_question)
+      sock.on('session_started', ({ totalQuestions: tq }) => {
+        totalQuestions = tq;
+        buildProgressDots(tq);
         showScreen('question');
       });
 
+      // New question from host
       sock.on('new_question', ({ index, total }) => {
         totalQuestions = total;
-        submitted = false;
+        submitted      = false;
         selectedAnswer = null;
         renderQuestion(index, total);
         showScreen('question');
@@ -399,29 +318,26 @@
     }
 
     function renderQuestion(index, total) {
-      currentQ = { index, total };
+      currentQ       = { index, total };
       selectedAnswer = null;
-      submitted = false;
+      // Don't reset submitted here — caller decides
 
-      // Update progress dots
       for (let i = 0; i < total; i++) {
         const d = document.getElementById(`pdot-${i}`);
         if (!d) continue;
         d.className = 'prog-dot' + (i < index ? ' done' : i === index ? ' active' : '');
       }
 
-      // Big number
-      document.getElementById('q-number').textContent = index + 1;
+      document.getElementById('q-number').textContent      = index + 1;
       document.getElementById('q-number-label').textContent = `Question ${index + 1} of ${total}`;
 
-      // Reset buttons
       ['A','B','C','D'].forEach(l => {
         const btn = document.getElementById(`btn-${l}`);
-        btn.disabled = false;
+        btn.disabled  = false;
         btn.className = `choice-btn btn-${l.toLowerCase()}`;
       });
 
-      document.getElementById('submit-q-btn').disabled = true;
+      document.getElementById('submit-q-btn').disabled      = true;
       document.getElementById('submit-q-btn').style.display = 'block';
       document.getElementById('waiting-next').classList.remove('show');
     }
@@ -430,9 +346,7 @@
       if (submitted) return;
       selectedAnswer = letter;
       ['A','B','C','D'].forEach(l => {
-        const btn = document.getElementById(`btn-${l}`);
-        if (l === letter) btn.classList.add('selected');
-        else btn.classList.remove('selected');
+        document.getElementById(`btn-${l}`).classList.toggle('selected', l === letter);
       });
       document.getElementById('submit-q-btn').disabled = false;
     };
@@ -456,23 +370,19 @@
     }
 
     function renderResults(results) {
-      const mine = results.find(r => r.name === myName);
-      const rankEmoji = ['🥇','🥈','🥉'];
+      const mine       = results.find(r => r.name === myName);
+      const rankEmoji  = ['🥇','🥈','🥉'];
       document.getElementById('my-rank').textContent =
         mine ? (rankEmoji[mine.rank - 1] || '#' + mine.rank) : '—';
       document.getElementById('my-score-display').textContent =
         mine ? `${mine.score} / ${mine.total}` : '—';
 
-      const list = document.getElementById('lb-list');
-      list.innerHTML = results.map((r, i) => {
-        const medal = rankEmoji[i] || '';
-        const rankCls = i===0?'g1':i===1?'g2':i===2?'g3':'';
-        return `<div class="lb-row ${r.name === myName ? 'me' : ''}">
-          <div class="lb-rank ${rankCls}">${medal || r.rank}</div>
+      document.getElementById('lb-list').innerHTML = results.map((r, i) => `
+        <div class="lb-row ${r.name === myName ? 'me' : ''}">
+          <div class="lb-rank ${i===0?'g1':i===1?'g2':i===2?'g3':''}">${rankEmoji[i] || r.rank}</div>
           <div class="lb-name">${r.name}${r.name === myName ? ' (you)' : ''}</div>
           <div class="lb-score">${r.score}/${r.total}</div>
-        </div>`;
-      }).join('');
+        </div>`).join('');
     }
 
     init();
